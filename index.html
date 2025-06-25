@@ -1,10 +1,1344 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Bulletin d'ouvertures Cauterets - Diaporama</title>
+    <style>
+        :root {
+            --primaryColor: #2a2840;
+            --primaryFont: Arial, Helvetica, sans-serif;
+            --displayMessagePOI: initial;
+            --fontForPrint: Arial, Helvetica, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--primaryFont);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 512px;
+            height: 512px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .slideshow-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .slide {
+            display: none;
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .slide.active {
+            display: block;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-header {
+            background: var(--primaryColor);
+            color: white;
+            padding: 10px 15px;
+            margin: -15px -15px 15px -15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slide-header img {
+            width: 32px;
+            height: 32px;
+            filter: brightness(0) invert(1);
+        }
+
+        .slide-header h1 {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .meteo-card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .bloc-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .bloc-title h2 {
+            font-size: 18px;
+            color: var(--primaryColor);
+            margin: 0;
+        }
+
+        .meteo-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            align-items: center;
+        }
+
+        .meteo-item {
+            text-align: center;
+            padding: 8px;
+            background: #f8f9fa;
+        }
+
+        .meteo-item img {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 5px;
+        }
+
+        .meteo-item .text {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primaryColor);
+            display: block;
+        }
+
+        .meteo-item .subtext {
+            font-size: 11px;
+            color: #666;
+            display: block;
+        }
+
+        .avalanche {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: #fff3cd;
+            padding: 8px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .avalanche-score {
+            font-size: 18px;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        .avalanche img {
+            width: 28px;
+            height: 28px;
+        }
+
+        .poi-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .poi-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid transparent;
+        }
+
+        .poi-item.open {
+            border-left-color: #28a745;
+        }
+
+        .poi-item.closed {
+            border-left-color: #dc3545;
+        }
+
+        .poi-item img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .poi-name {
+            flex: 1;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--primaryColor);
+        }
+
+        .poi-status {
+            font-size: 11px;
+            padding: 2px 6px;
+            color: white;
+        }
+
+        .poi-status.open {
+            background: #28a745;
+        }
+
+        .poi-status.closed {
+            background: #dc3545;
+        }
+
+        .poi-message {
+            font-size: 11px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .counter {
+            background: var(--primaryColor);
+            color: white;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .road-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            margin-bottom: 6px;
+            background: #f8f9fa;
+        }
+
+        .road-item img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .progress-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: var(--primaryColor);
+            transition: width 0.1s linear;
+        }
+
+        .slide-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(42, 40, 64, 0.8);
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .weather-forecast {
+            background: #e3f2fd;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .forecast-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primaryColor);
+            margin-bottom: 8px;
+        }
+
+        .forecast-text {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
+<div class="slideshow-container">
+    <div class="progress-bar" id="progressBar"></div>
 
+    <!-- Slide 1: Météo Pied de Pistes -->
+    <div class="slide active">
+        <div class="slide-indicator">1/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="météo">
+            <h1>Météo - Pied de Pistes</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>1850 m</h2>
+            </div>
+            <div class="meteo-row">
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Matin</span>
+                    <span class="text">14°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Après-midi</span>
+                    <span class="text">13°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M9 11H7v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9h-2m-4-6a4 4 0 0 1 4 4v2H9V9a4 4 0 0 1 4-4Z'/></svg>" alt="vent">
+                    <span class="subtext">Vent Sud</span>
+                    <span class="text">44km/h</span>
+                </div>
+            </div>
+            <div class="avalanche">
+                <div class="avalanche-score">2/5</div>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L1 21h22L12 2zm0 3.5L19.53 19H4.47L12 5.5z'/></svg>" alt="avalanche">
+                <span>Risque Limité</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Météo Crêtes du Lys -->
+    <div class="slide">
+        <div class="slide-indicator">2/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="météo">
+            <h1>Météo - Crêtes du Lys</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>2415 m</h2>
+            </div>
+            <div class="meteo-row">
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Matin</span>
+                    <span class="text">14°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Après-midi</span>
+                    <span class="text">13°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M9 11H7v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9h-2m-4-6a4 4 0 0 1 4 4v2H9V9a4 4 0 0 1 4-4Z'/></svg>" alt="vent">
+                    <span class="subtext">Vent Sud</span>
+                    <span class="text">44km/h</span>
+                </div>
+            </div>
+            <div class="avalanche">
+                <div class="avalanche-score">2/5</div>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L1 21h22L12 2zm0 3.5L19.53 19H4.47L12 5.5z'/></svg>" alt="avalanche">
+                <span>Risque Limité</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Météo Pont d'Espagne -->
+    <div class="slide">
+        <div class="slide-indicator">3/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="météo">
+            <h1>Météo - Pont d'Espagne</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>1500 m</h2>
+            </div>
+            <div class="meteo-row">
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Matin</span>
+                    <span class="text">19°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='5'/><path d='m12 1-1.5 4h3L12 1zM21 13h-4l1.5-1.5L21 13zM20.5 5.5L18 8l-1.5-1.5L20.5 5.5zM12 23l1.5-4h-3L12 23zM3 11h4L5.5 12.5L3 11zM3.5 18.5L6 16l1.5 1.5L3.5 18.5z'/></svg>" alt="soleil">
+                    <span class="subtext">Après-midi</span>
+                    <span class="text">24°C</span>
+                </div>
+                <div class="meteo-item">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M9 11H7v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-9h-2m-4-6a4 4 0 0 1 4 4v2H9V9a4 4 0 0 1 4-4Z'/></svg>" alt="vent">
+                    <span class="subtext">Vent Sud</span>
+                    <span class="text">18km/h</span>
+                </div>
+            </div>
+            <div class="avalanche">
+                <div class="avalanche-score">2/5</div>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L1 21h22L12 2zm0 3.5L19.53 19H4.47L12 5.5z'/></svg>" alt="avalanche">
+                <span>Risque Limité</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Conseil du jour & Routes -->
+    <div class="slide">
+        <div class="slide-indicator">4/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9H21ZM19 21H5V3H13V9H19V21Z'/></svg>" alt="info">
+            <h1>Conditions de séjour</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Conseil du jour</h2>
+            </div>
+            <p style="font-size: 14px; line-height: 1.4; color: #333; padding: 10px; background: #fff3cd; border-radius: 6px; border-left: 4px solid #ffc107;">
+                <strong>Le Cirque du Lys est fermé</strong><br>
+                Réouverture des remontées mécaniques pour la randonnée le 19 juillet
+            </p>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>État des routes</h2>
+            </div>
+            <div class="road-item">
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="ouvert">
+                <div>
+                    <div style="font-weight: bold; font-size: 14px;">Cauterets</div>
+                    <div style="font-size: 12px; color: #666;">Claire et humide - Aucun équipement</div>
+                </div>
+            </div>
+            <div class="road-item">
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="ouvert">
+                <div>
+                    <div style="font-weight: bold; font-size: 14px;">Pont d'Espagne</div>
+                    <div style="font-size: 12px; color: #666;">Claire et humide - Aucun équipement</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Cirque du Lys - Remontées -->
+    <div class="slide">
+        <div class="slide-indicator">5/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="remontées">
+            <h1>Cirque du Lys</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Remontées Mécaniques</h2>
+                <span class="counter">0/4</span>
+            </div>
+            <div class="poi-list">
+                <div class="poi-item closed">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="télécabine">
+                    <div>
+                        <div class="poi-name">Lys</div>
+                    </div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+                <div class="poi-item closed">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="télésiège">
+                    <div>
+                        <div class="poi-name">Grand-Barbat</div>
+                    </div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+                <div class="poi-item closed">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="tapis">
+                    <div>
+                        <div class="poi-name">Big Foot</div>
+                    </div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+                <div class="poi-item closed">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="tapis">
+                    <div>
+                        <div class="poi-name">Grand Yéti</div>
+                    </div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Cirque du Lys - Activités -->
+    <div class="slide">
+        <div class="slide-indicator">6/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="activités">
+            <h1>Cirque du Lys - Activités</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Pistes et activités</h2>
+                <span class="counter">1/1</span>
+            </div>
+            <div class="poi-list">
+                <div class="poi-item open">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="piéton">
+                    <div>
+                        <div class="poi-name">Lac d'Ilhéou</div>
+                    </div>
+                    <span class="poi-status open">Ouvert</span>
+                </div>
+            </div>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Services</h2>
+            </div>
+            <div class="poi-list">
+                <div class="poi-item closed">
+                    <div class="poi-name">Caisses Village Télécabine Lys</div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+                <div class="poi-item closed">
+                    <div class="poi-name">Lys Café</div>
+                    <span class="poi-status closed">Fermé</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Pont d'Espagne -->
+    <div class="slide">
+        <div class="slide-indicator">7/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="remontées">
+            <h1>Pont d'Espagne</h1>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Remontées Mécaniques</h2>
+                <span class="counter">2/2</span>
+            </div>
+            <div class="poi-list">
+                <div class="poi-item open">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="télécabine">
+                    <div>
+                        <div class="poi-name">Puntas</div>
+                        <div class="poi-message">ouvert de 9h30 à 17h</div>
+                    </div>
+                    <span class="poi-status open">Ouvert</span>
+                </div>
+                <div class="poi-item open">
+                    <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2L12 22M2 12L22 12'/></svg>" alt="télésiège">
+                    <div>
+                        <div class="poi-name">Gaube</div>
+                        <div class="poi-message">ouvert de 9h45 à 16h45</div>
+                    </div>
+                    <span class="poi-status open">Ouvert</span>
+                </div>
+            </div>
+        </div>
+        <div class="meteo-card">
+            <div class="bloc-title">
+                <h2>Activités</h2>
+                <span class="counter">1/1</span>
+            </div>
+            <div class="poi-item open">
+                <div class="poi-name">Lac de Gaube</div>
+                <span class="poi-status open">Ouvert</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Prévisions -->
+    <div class="slide">
+        <div class="slide-indicator">8/8</div>
+        <div class="slide-header">
+            <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z'/></svg>" alt="prévisions">
+            <h1>Prévisions</h1>
+        </div>
+        <div class="weather-forecast">
+            <div class="forecast-title">Bulletin du jour</div>
+            <div class="forecast-text">
+                À la mi-journée, le ciel est voilé par des nuages. Des averses se forment avec risque d'orages. L'instabilité se généralise l'après-midi. Vent modéré variable avec rafales jusqu'à 55 km/h.
+            </div>
+        </div>
+        <div class="weather-forecast" style="margin-top: 15px;">
+            <div class="forecast-title">Bulletin du lendemain</div>
+            <div class="forecast-text">
+                Journée lumineuse malgré des nuages élevés. La nuit : nuages et éclaircies se partagent le ciel. Brumes en vallées après minuit. Vent variable faible.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    class CauteretsSlideshow {
+        constructor() {
+            this.slides = document.querySelectorAll('.slide');
+            this.currentSlide = 0;
+            this.slideInterval = 15000; // 15 secondes par slide
+            this.progressBar = document.getElementById('progressBar');
+            this.progressInterval = null;
+            this.refreshInterval = 5 * 60 * 1000; // Refresh toutes les 5 minutes
+            this.debugMode = true; // Mode debug pour les tests
+            this.lastUpdateTime = null;
+            this.failedAttempts = 0;
+            this.maxFailedAttempts = 3;
+            this.startTime = Date.now();
+            this.lastGoodData = null;
+            this.isPaused = false;
+
+            this.init();
+        }
+
+        init() {
+            this.log('🚀 Bulletin Cauterets - Diaporama initialisé');
+            this.log(`📱 Résolution: ${window.innerWidth}x${window.innerHeight}`);
+            this.log(`⏱️ Intervalle slides: ${this.slideInterval/1000}s`);
+            this.log(`🔄 Intervalle refresh: ${this.refreshInterval/1000/60}min`);
+            this.log('🌐 URL principale: https://bulletinv3.lumiplan.pro/bulletin.php?station=cauterets');
+
+            this.startSlideshow();
+            this.startDataRefresh();
+            this.addKeyboardControls(); // Pour les tests
+            this.addDebugInfo();
+        }
+
+        log(message, data = null) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+
+            if (this.debugMode) {
+                console.log(logMessage, data || '');
+            }
+
+            // Affichage dans l'interface en mode debug
+            if (this.debugMode) {
+                this.updateDebugInfo(logMessage);
+            }
+        }
+
+        addDebugInfo() {
+            if (!this.debugMode) return;
+
+            // Ajoute un panneau de debug
+            const debugPanel = document.createElement('div');
+            debugPanel.id = 'debugPanel';
+            debugPanel.style.cssText = `
+                    position: fixed;
+                    top: 50px;
+                    right: 10px;
+                    width: 200px;
+                    max-height: 300px;
+                    background: rgba(0,0,0,0.8);
+                    color: #00ff00;
+                    font-family: monospace;
+                    font-size: 10px;
+                    padding: 10px;
+                    border-radius: 5px;
+                    overflow-y: auto;
+                    z-index: 1000;
+                    display: none;
+                `;
+            document.body.appendChild(debugPanel);
+
+            // Toggle debug avec la touche D
+            document.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'd') {
+                    const panel = document.getElementById('debugPanel');
+                    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                }
+            });
+        }
+
+        updateDebugInfo(message) {
+            const panel = document.getElementById('debugPanel');
+            if (panel) {
+                panel.innerHTML += message + '<br>';
+                panel.scrollTop = panel.scrollHeight;
+
+                // Limite à 50 lignes
+                const lines = panel.innerHTML.split('<br>');
+                if (lines.length > 50) {
+                    panel.innerHTML = lines.slice(-50).join('<br>');
+                }
+            }
+        }
+
+        addKeyboardControls() {
+            if (!this.debugMode) return;
+
+            document.addEventListener('keydown', (e) => {
+                switch(e.key) {
+                    case 'ArrowRight':
+                        this.nextSlide();
+                        this.log('➡️ Slide suivante (manuel)');
+                        break;
+                    case 'ArrowLeft':
+                        this.previousSlide();
+                        this.log('⬅️ Slide précédente (manuel)');
+                        break;
+                    case 'r':
+                        this.fetchBulletinData();
+                        this.log('🔄 Refresh manuel déclenché');
+                        break;
+                    case 'p':
+                        this.togglePause();
+                        break;
+                }
+            });
+
+            this.log('⌨️ Contrôles: ← → (navigation), R (refresh), D (debug), P (pause)');
+        }
+
+        previousSlide() {
+            const prevIndex = (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+            this.showSlide(prevIndex);
+        }
+
+        togglePause() {
+            if (this.isPaused) {
+                this.startSlideshow();
+                this.log('▶️ Diaporama repris');
+            } else {
+                clearInterval(this.slideshowInterval);
+                this.isPaused = true;
+                this.log('⏸️ Diaporama en pause');
+            }
+        }
+
+        startSlideshow() {
+            this.showSlide(0);
+
+            setInterval(() => {
+                this.nextSlide();
+            }, this.slideInterval);
+        }
+
+        showSlide(index) {
+            // Cache toutes les slides
+            this.slides.forEach(slide => slide.classList.remove('active'));
+
+            // Affiche la slide courante
+            this.slides[index].classList.add('active');
+            this.currentSlide = index;
+
+            // Démarre la barre de progression
+            this.startProgress();
+        }
+
+        nextSlide() {
+            const nextIndex = (this.currentSlide + 1) % this.slides.length;
+            this.showSlide(nextIndex);
+        }
+
+        startProgress() {
+            if (this.progressInterval) {
+                clearInterval(this.progressInterval);
+            }
+
+            let progress = 0;
+            const increment = 100 / (this.slideInterval / 100);
+
+            this.progressBar.style.width = '0%';
+
+            this.progressInterval = setInterval(() => {
+                progress += increment;
+                this.progressBar.style.width = Math.min(progress, 100) + '%';
+
+                if (progress >= 100) {
+                    clearInterval(this.progressInterval);
+                }
+            }, 100);
+        }
+
+        // Méthode pour récupérer les données depuis la page web
+        async fetchBulletinData() {
+            // URL officielle Lumiplan pour Cauterets
+            const bulletinUrl = 'https://bulletinv3.lumiplan.pro/bulletin.php?station=cauterets&lang=en&isSoir=false&isMarge=true&displayBloc=1-2-4';
+
+            // URLs de fallback en cas d'échec
+            const fallbackUrls = [
+                'https://bulletincauteretsstramatel.pages.dev/',
+                'https://bulletincauteretsstramatel4.pages.dev/',
+                'https://test2.bulletincauteretsstramatel.pages.dev/'
+            ];
+
+            const allUrls = [bulletinUrl, ...fallbackUrls];
+
+            for (const currentUrl of allUrls) {
+                try {
+                    this.log(`🔍 Tentative de récupération depuis: ${currentUrl}`);
+
+                    // Méthode 1: Tentative directe (peut échouer à cause de CORS)
+                    let htmlContent;
+                    try {
+                        const directResponse = await fetch(currentUrl, {
+                            mode: 'cors',
+                            headers: {
+                                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                            }
+                        });
+
+                        if (!directResponse.ok) {
+                            throw new Error(`HTTP ${directResponse.status}: ${directResponse.statusText}`);
+                        }
+
+                        htmlContent = await directResponse.text();
+                        this.log('✅ Accès direct réussi');
+                    } catch (corsError) {
+                        this.log(`❌ Accès direct bloqué: ${corsError.message}`);
+
+                        // Méthode 2: Utilisation d'un proxy CORS
+                        const proxyUrls = [
+                            `https://api.allorigins.win/get?url=${encodeURIComponent(currentUrl)}`,
+                            `https://corsproxy.io/?${encodeURIComponent(currentUrl)}`,
+                            `https://cors-anywhere.herokuapp.com/${currentUrl}`
+                        ];
+
+                        for (const proxyUrl of proxyUrls) {
+                            try {
+                                this.log(`🔄 Tentative proxy: ${proxyUrl.split('?')[0]}`);
+                                const proxyResponse = await fetch(proxyUrl, {
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest'
+                                    }
+                                });
+
+                                if (!proxyResponse.ok) {
+                                    throw new Error(`Proxy HTTP ${proxyResponse.status}`);
+                                }
+
+                                const proxyData = await proxyResponse.json();
+                                htmlContent = proxyData.contents || proxyData.data || proxyData;
+
+                                if (typeof htmlContent !== 'string') {
+                                    throw new Error('Réponse proxy invalide');
+                                }
+
+                                this.log('✅ Accès via proxy réussi');
+                                break;
+                            } catch (proxyError) {
+                                this.log(`❌ Proxy échoué: ${proxyError.message}`);
+                                continue;
+                            }
+                        }
+                    }
+
+                    if (!htmlContent || htmlContent.trim().length === 0) {
+                        throw new Error('Contenu HTML vide ou invalide');
+                    }
+
+                    // Vérification que c'est bien du HTML
+                    if (!htmlContent.includes('<html') && !htmlContent.includes('<body') && !htmlContent.includes('<div')) {
+                        throw new Error('Contenu ne semble pas être du HTML valide');
+                    }
+
+                    // Debug: afficher un extrait du contenu récupéré
+                    if (this.debugMode && htmlContent.length > 0) {
+                        this.log(`📄 HTML récupéré (${htmlContent.length} caractères):`);
+                        this.log(`Extrait: ${htmlContent.substring(0, 200)}...`);
+                    }
+
+                    // Parse le HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlContent, 'text/html');
+
+                    // Vérification que le parsing a fonctionné
+                    if (!doc || !doc.querySelector('body')) {
+                        throw new Error('Parsing HTML échoué');
+                    }
+
+                    this.log('✅ HTML parsé avec succès');
+
+                    // Debug: afficher la structure du document
+                    if (this.debugMode) {
+                        const bodyContent = doc.body ? doc.body.innerHTML : 'Pas de body';
+                        this.log(`🔍 Structure body: ${bodyContent.substring(0, 300)}...`);
+                    }
+
+                    // Extraction des données
+                    const extractedData = this.parseWeatherData(doc);
+
+                    // Vérification que des données ont été extraites
+                    if (!this.validateExtractedData(extractedData)) {
+                        throw new Error('Données extraites invalides ou incomplètes');
+                    }
+
+                    this.updateData(extractedData);
+
+                    this.log('✅ Données rafraîchies à', new Date().toLocaleTimeString());
+                    if (this.debugMode) {
+                        this.log('📊 Données extraites:', extractedData);
+                    }
+                    return; // Succès, on sort de la boucle
+
+                } catch (error) {
+                    this.log(`❌ Erreur avec ${currentUrl}:`, error.message);
+                    continue; // Essaie la prochaine URL
+                }
+            }
+
+            // Si toutes les tentatives ont échoué
+            this.log('🚨 Toutes les tentatives de récupération ont échoué');
+
+            // Teste la connectivité
+            const hasConnectivity = await this.testConnectivity();
+            if (!hasConnectivity) {
+                this.log('🌐 Problème de connectivité détecté');
+            }
+
+            // Tente de charger les dernières bonnes données
+            if (!this.loadLastGoodData()) {
+                this.useDefaultData();
+            }
+        }
+
+        // Méthode alternative pour environnement local/serveur
+        async fetchBulletinDataLocal() {
+            try {
+                // Cette méthode peut être utilisée si vous avez un serveur proxy local
+                // ou si vous exécutez le code dans un environnement Node.js
+                const response = await fetch('/api/bulletin-proxy', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const htmlContent = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlContent, 'text/html');
+                const extractedData = this.parseWeatherData(doc);
+
+                if (!this.validateExtractedData(extractedData)) {
+                    throw new Error('Données serveur local invalides');
+                }
+
+                this.updateData(extractedData);
+                this.log('✅ Données récupérées via serveur local');
+            } catch (error) {
+                this.log('❌ Erreur serveur local:', error.message);
+                this.fetchBulletinData(); // Fallback vers la méthode principale
+            }
+        }
+
+        // Parser pour extraire les données météo et des remontées
+        parseWeatherData(doc) {
+            const data = {
+                weather: {},
+                lifts: {},
+                roads: [],
+                forecast: {}
+            };
+
+            try {
+                this.log('🔍 Début du parsing des données...');
+
+                // Extraction des données météo pour chaque station
+                const meteoCards = doc.querySelectorAll('.meteo_card');
+                this.log(`📡 ${meteoCards.length} cartes météo trouvées`);
+
+                meteoCards.forEach((card, index) => {
+                    const title = this.cleanText(card.querySelector('.bloc_title_text')?.textContent);
+                    const altitude = this.cleanText(card.querySelector('.bloc_title h2:last-child')?.textContent);
+
+                    if (title && title.includes('Pied de Pistes')) {
+                        data.weather.piedPistes = this.extractWeatherFromCard(card);
+                        this.log('✅ Météo Pied de Pistes extraite');
+                    } else if (title && title.includes('Crêtes du Lys')) {
+                        data.weather.cretes = this.extractWeatherFromCard(card);
+                        this.log('✅ Météo Crêtes du Lys extraite');
+                    } else if (title && title.includes('Pont d')) {
+                        data.weather.pontEspagne = this.extractWeatherFromCard(card);
+                        this.log('✅ Météo Pont d\'Espagne extraite');
+                    }
+                });
+
+                // Extraction des remontées mécaniques
+                const liftSections = doc.querySelectorAll('.remontee_pistes');
+                this.log(`🎿 ${liftSections.length} sections de remontées trouvées`);
+
+                liftSections.forEach(section => {
+                    const sectionTitle = this.cleanText(section.closest('.meteo_card')?.querySelector('.bloc_title_text')?.textContent);
+
+                    if (sectionTitle) {
+                        data.lifts[sectionTitle] = this.extractLiftsFromSection(section);
+                        this.log(`✅ Section ${sectionTitle} extraite`);
+                    }
+                });
+
+                // Extraction des routes
+                const roadItems = doc.querySelectorAll('.road');
+                this.log(`🛣️ ${roadItems.length} routes trouvées`);
+
+                roadItems.forEach(road => {
+                    const roadData = this.extractRoadData(road);
+                    if (roadData.name && roadData.name !== 'État' && roadData.name !== 'Nom') {
+                        data.roads.push(roadData);
+                    }
+                });
+
+                // Extraction des prévisions
+                const previsions = doc.querySelectorAll('.previsions');
+                this.log(`🌤️ ${previsions.length} prévisions trouvées`);
+
+                previsions.forEach(prev => {
+                    const title = this.cleanText(prev.querySelector('.titre_prevision')?.textContent);
+                    const text = this.cleanText(prev.querySelector('.text_prevision')?.textContent);
+
+                    if (title && text) {
+                        data.forecast[title] = text;
+                    }
+                });
+
+                this.log('✅ Parsing terminé avec succès');
+
+            } catch (error) {
+                this.log('❌ Erreur lors du parsing:', error.message);
+            }
+
+            return data;
+        }
+
+        // Extraire les données météo d'une carte
+        extractWeatherFromCard(card) {
+            const weather = {};
+
+            try {
+                // Recherche des éléments météo avec sélecteurs multiples
+                const meteoSelectors = [
+                    '.meteo_matin',
+                    '.meteo-item',
+                    '.weather-item',
+                    '[class*="meteo"]'
+                ];
+
+                let meteoItems = [];
+                for (const selector of meteoSelectors) {
+                    meteoItems = card.querySelectorAll(selector);
+                    if (meteoItems.length > 0) break;
+                }
+
+                // Si pas d'éléments structurés, cherche dans le texte
+                if (meteoItems.length === 0) {
+                    const cardText = card.textContent;
+
+                    // Extraction par regex des températures
+                    const tempMatches = cardText.match(/(\d+)°C/g);
+                    if (tempMatches && tempMatches.length >= 2) {
+                        weather.matin = tempMatches[0];
+                        weather.apresmidi = tempMatches[1];
+                    }
+
+                    // Extraction du vent
+                    const ventMatch = cardText.match(/(\d+)\s*km\/h/i);
+                    if (ventMatch) {
+                        weather.vent = ventMatch[0];
+                    }
+
+                    // Extraction direction
+                    const directions = ['sud', 'nord', 'est', 'ouest', 'so', 'no', 'se', 'ne'];
+                    for (const dir of directions) {
+                        if (cardText.toLowerCase().includes(dir)) {
+                            weather.direction = dir.charAt(0).toUpperCase() + dir.slice(1);
+                            break;
+                        }
+                    }
+
+                    // Extraction avalanche
+                    const avalancheMatch = cardText.match(/(\d)\/5/);
+                    if (avalancheMatch) {
+                        weather.avalanche = avalancheMatch[0];
+                        const score = parseInt(avalancheMatch[1]);
+                        const risks = ['', 'Faible', 'Limité', 'Marqué', 'Fort', 'Très fort'];
+                        weather.avalancheText = risks[score] || 'Inconnu';
+                    }
+
+                    return weather;
+                }
+
+                // Extraction structurée normale
+                meteoItems.forEach(item => {
+                    const subtextSelectors = ['.subtext', '.label', '.time', 'span'];
+                    const textSelectors = ['.text', '.value', '.temp', 'strong'];
+
+                    let subtext = '';
+                    let text = '';
+
+                    for (const selector of subtextSelectors) {
+                        const el = item.querySelector(selector);
+                        if (el) {
+                            subtext = this.cleanText(el.textContent);
+                            break;
+                        }
+                    }
+
+                    for (const selector of textSelectors) {
+                        const el = item.querySelector(selector);
+                        if (el) {
+                            text = this.cleanText(el.textContent);
+                            break;
+                        }
+                    }
+
+                    // Analyse du contenu pour identifier le type de donnée
+                    const combinedText = (subtext + ' ' + text).toLowerCase();
+
+                    if (combinedText.includes('matin') && text.includes('°')) {
+                        weather.matin = text;
+                    } else if (combinedText.includes('après-midi') && text.includes('°')) {
+                        weather.apresmidi = text;
+                    } else if (combinedText.includes('km/h') || text.includes('km/h')) {
+                        weather.vent = text || subtext;
+                    } else if (['sud', 'nord', 'est', 'ouest', 'so', 'no', 'se', 'ne'].some(dir =>
+                        combinedText.includes(dir))) {
+                        weather.direction = subtext || text;
+                    }
+                });
+
+                // Risque d'avalanche avec sélecteurs multiples
+                const avalancheSelectors = [
+                    '.avalanche_score .bold',
+                    '.avalanche-score',
+                    '.risk-score',
+                    '[class*="avalanche"] .score',
+                    '[class*="avalanche"] strong'
+                ];
+
+                let avalancheScore = '';
+                for (const selector of avalancheSelectors) {
+                    const el = card.querySelector(selector);
+                    if (el) {
+                        avalancheScore = this.cleanText(el.textContent);
+                        break;
+                    }
+                }
+
+                if (avalancheScore && !isNaN(avalancheScore)) {
+                    weather.avalanche = avalancheScore + '/5';
+
+                    // Détermine le niveau de risque textuel
+                    const score = parseInt(avalancheScore);
+                    const risks = ['', 'Faible', 'Limité', 'Marqué', 'Fort', 'Très fort'];
+                    weather.avalancheText = risks[score] || 'Inconnu';
+                }
+
+            } catch (error) {
+                this.log('❌ Erreur extraction météo:', error.message);
+            }
+
+            return weather;
+        }
+
+        // Extraire les données des remontées
+        extractLiftsFromSection(section) {
+            const lifts = {
+                remontees: [],
+                activities: []
+            };
+
+            try {
+                const poiInfos = section.querySelectorAll('.POI_info');
+
+                poiInfos.forEach(poi => {
+                    const name = poi.querySelector('.nom')?.textContent.trim();
+                    const message = poi.querySelector('.message')?.textContent.trim();
+                    const isOpen = poi.querySelector('img[src*="opened"]') !== null;
+                    const isClosed = poi.querySelector('img[src*="closed"]') !== null;
+
+                    // Détermine le type d'équipement
+                    const typeImg = poi.querySelector('.poi_type_picto img');
+                    let type = 'unknown';
+                    if (typeImg) {
+                        const src = typeImg.src || typeImg.getAttribute('src') || '';
+                        if (src.includes('GONDOLA')) type = 'télécabine';
+                        else if (src.includes('CHAIRLIFT')) type = 'télésiège';
+                        else if (src.includes('MAGIC_CARPET')) type = 'tapis';
+                        else if (src.includes('PEDESTRIAN')) type = 'piéton';
+                        else if (src.includes('MOUNTAIN_RESTAURANT')) type = 'restaurant';
+                        else if (src.includes('SALES_OFFICE')) type = 'caisse';
+                        else if (src.includes('BAGLESS_ROOM')) type = 'refuge';
+                        else if (src.includes('DOWNHILL_MOUNTAIN_BIKING')) type = 'vtt';
+                    }
+
+                    if (name) {
+                        const item = {
+                            name,
+                            type,
+                            status: isOpen ? 'ouvert' : (isClosed ? 'fermé' : 'inconnu'),
+                            message: message || ''
+                        };
+
+                        // Sépare remontées et activités
+                        if (type === 'télécabine' || type === 'télésiège' || type === 'tapis') {
+                            lifts.remontees.push(item);
+                        } else {
+                            lifts.activities.push(item);
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Erreur extraction remontées:', error);
+            }
+
+            return lifts;
+        }
+
+        // Extraire les données des routes
+        extractRoadData(road) {
+            const roadData = {};
+
+            try {
+                const name = road.querySelector('.road_name')?.textContent.trim();
+                const surface = road.querySelector('.road_surface')?.textContent.trim();
+                const equipment = road.querySelector('.road_equipment')?.textContent.trim();
+                const isOpen = road.querySelector('img[src*="opened"]') !== null;
+
+                roadData.name = name;
+                roadData.surface = surface;
+                roadData.equipment = equipment;
+                roadData.status = isOpen ? 'ouvert' : 'fermé';
+
+            } catch (error) {
+                console.error('Erreur extraction route:', error);
+            }
+
+            return roadData;
+        }
+
+        // Méthode pour mettre à jour les données dans l'interface
+        updateData(data) {
+            try {
+                // Validation des données
+                if (!this.validateExtractedData(data)) {
+                    throw new Error('Données invalides ou incomplètes');
+                }
+
+                // Sauvegarde des bonnes données
+                this.saveLastGoodData(data);
+
+                // Mise à jour des températures
+                this.updateWeatherDisplay(data.weather);
+
+                // Mise à jour des états des remontées
+                this.updateLiftsDisplay(data.lifts);
+
+                // Mise à jour des routes
+                this.updateRoadsDisplay(data.roads);
+
+                // Mise à jour des prévisions
+                this.updateForecastDisplay(data.forecast);
+
+                this.log('✅ Interface mise à jour avec les nouvelles données');
+
+            } catch (error) {
+                this.log('❌ Erreur mise à jour interface:', error.message);
+
+                // Tentative de charger les dernières bonnes données
+                if (!this.loadLastGoodData()) {
+                    this.useDefaultData();
+                }
+            }
+        }
+
+        // Mise à jour de l'affichage météo
+        updateWeatherDisplay(weather) {
+            // Cette méthode met à jour les éléments DOM avec les nouvelles données météo
+            if (weather.piedPistes) {
+                this.updateSlideWeather(0, weather.piedPistes);
+            }
+            if (weather.cretes) {
+                this.updateSlideWeather(1, weather.cretes);
+            }
+            if (weather.pontEspagne) {
+                this.updateSlideWeather(2, weather.pontEspagne);
+            }
+        }
+
+        // Mise à jour d'une slide météo spécifique
+        updateSlideWeather(slideIndex, weatherData) {
+            const slide = this.slides[slideIndex];
+            if (!slide) return;
+
+            // Met à jour les températures
+            const matinTemp = slide.querySelector('.meteo-item:nth-child(1) .text');
+            const apresTemp = slide.querySelector('.meteo-item:nth-child(2) .text');
+            const ventText = slide.querySelector('.meteo-item:nth-child(3) .text');
+
+            if (matinTemp && weatherData.matin) matinTemp.textContent = weatherData.matin;
+            if (apresTemp && weatherData.apresmidi) apresTemp.textContent = weatherData.apresmidi;
+            if (ventText && weatherData.vent) ventText.textContent = weatherData.vent;
+
+            // Met à jour le risque d'avalanche
+            const avalancheScore = slide.querySelector('.avalanche-score');
+            if (avalancheScore && weatherData.avalanche) {
+                avalancheScore.textContent = weatherData.avalanche;
+            }
+        }
+
+        // Mise à jour de l'affichage des remontées
+        updateLiftsDisplay(lifts) {
+            // Mise à jour des compteurs et statuts des remontées
+            Object.keys(lifts).forEach(sectionName => {
+                this.updateLiftSection(sectionName, lifts[sectionName]);
+            });
+        }
+
+        updateLiftSection(sectionName, sectionData) {
+            // Trouve la slide correspondante et met à jour les données
+            console.log(`Mise à jour section: ${sectionName}`, sectionData);
+        }
+
+        // Mise à jour de l'affichage des routes
+        updateRoadsDisplay(roads) {
+            const roadSlide = this.slides[3]; // Slide des conditions de séjour
+            if (!roadSlide) return;
+
+            roads.forEach((road, index) => {
+                const roadItem = roadSlide.querySelector(`.road-item:nth-child(${index + 1})`);
+                if (roadItem && road.name) {
+                    const nameEl = roadItem.querySelector('div > div:first-child');
+                    const detailEl = roadItem.querySelector('div > div:last-child');
+
+                    if (nameEl) nameEl.textContent = road.name;
+                    if (detailEl) detailEl.textContent = `${road.surface} - ${road.equipment}`;
+                }
+            });
+        }
+
+        // Mise à jour des prévisions
+        updateForecastDisplay(forecast) {
+            const forecastSlide = this.slides[7]; // Dernière slide
+            if (!forecastSlide) return;
+
+            Object.keys(forecast).forEach((title, index) => {
+                const forecastEl = forecastSlide.querySelector(`.weather-forecast:nth-child(${index + 2}) .forecast-text`);
+                if (forecastEl) {
+                    // Tronque le texte pour l'affichage
+                    const shortText = forecast[title].substring(0, 200) + (forecast[title].length > 200 ? '...' : '');
+                    forecastEl.textContent = shortText;
+                }
+            });
+        }
+
+        // Données par défaut en cas d'erreur
+        useDefaultData() {
+            console.log('Utilisation des données par défaut');
+            // Garde les données statiques actuelles
+        }
+
+        startDataRefresh() {
+            // Refresh initial
+            this.fetchBulletinData();
+
+            // Refresh périodique
+            setInterval(() => {
+                this.fetchBulletinData();
+            }, this.refreshInterval);
+        }
+    }
+
+    // Démarrage du diaporama quand la page est chargée
+    document.addEventListener('DOMContentLoaded', () => {
+        new CauteretsSlideshow();
+    });
+</script>
 </body>
 </html>
