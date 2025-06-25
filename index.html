@@ -758,7 +758,7 @@
                 'https://test2.bulletincauteretsstramatel.pages.dev/'
             ];
 
-            const allUrls = [bulletinUrl, ...fallbackUrls];
+            const allUrls = [bulletinUrl];
 
             for (const currentUrl of allUrls) {
                 try {
@@ -829,12 +829,6 @@
                         throw new Error('Contenu ne semble pas être du HTML valide');
                     }
 
-                    // Debug: afficher un extrait du contenu récupéré
-                    if (this.debugMode && htmlContent.length > 0) {
-                        this.log(`📄 HTML récupéré (${htmlContent.length} caractères):`);
-                        this.log(`Extrait: ${htmlContent.substring(0, 200)}...`);
-                    }
-
                     // Parse le HTML
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(htmlContent, 'text/html');
@@ -845,12 +839,6 @@
                     }
 
                     this.log('✅ HTML parsé avec succès');
-
-                    // Debug: afficher la structure du document
-                    if (this.debugMode) {
-                        const bodyContent = doc.body ? doc.body.innerHTML : 'Pas de body';
-                        this.log(`🔍 Structure body: ${bodyContent.substring(0, 300)}...`);
-                    }
 
                     // Extraction des données
                     const extractedData = this.parseWeatherData(doc);
